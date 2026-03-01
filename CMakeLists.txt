@@ -13,4 +13,5 @@ target_link_libraries( C__GameDEV
         SDL2::SDL2
         OpenGL::GL
         GLEW::GLEW
+        stb
 )
