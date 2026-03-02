@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glm REQUIRED)
 
 add_executable(C__GameDEV main.cpp)
 
@@ -14,4 +15,5 @@ target_link_libraries( C__GameDEV
         OpenGL::GL
         GLEW::GLEW
         stb
+        glm::glm
 )

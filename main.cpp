@@ -3,17 +3,20 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 const char* vertexShaderSrc = R"(
 #version 440 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aUV;
 
-uniform vec2 offset;
+uniform mat4 transform;
 out vec2 vertexUV;
+
 void main(){
-    gl_Position = vec4(aPos.x + offset.x, aPos.y + offset.y, aPos.z, 1.0);
+    gl_Position = transform * vec4(aPos, 1.0);
     vertexUV = aUV;
 }
 )";
@@ -74,7 +77,6 @@ int main() {
     // Position - location 0
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
     // UV - location 1
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
@@ -82,10 +84,8 @@ int main() {
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -106,13 +106,20 @@ int main() {
 
     GLuint vertShader = CompileShader(GL_VERTEX_SHADER, vertexShaderSrc);
     GLuint fragShader = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
-
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertShader);
     glAttachShader(shaderProgram, fragShader);
     glLinkProgram(shaderProgram);
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
+
+
+    //3 objects positions
+    glm::vec3 positions[] = {
+        glm::vec3(0.0f, 0.0f, 0.0f), //center
+        glm::vec3(0.6f, 0.6f, 0.0f), //top right
+        glm::vec3(-0.6f, -0.6f, 0.0f), //bottom left
+    };
 
     float posX = 0.0f;
     float posY = 0.0f;
@@ -132,16 +139,23 @@ int main() {
         if (keys[SDL_SCANCODE_A]) posX -= speed;
         if (keys[SDL_SCANCODE_D]) posX += speed;
 
+        positions[0] = glm::vec3(posX, posY, 0.0f);
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shaderProgram);
         glBindTexture(GL_TEXTURE_2D, texture);
-
-        GLint offsetLocation = glGetUniformLocation(shaderProgram, "offset");
-        glUniform2f(offsetLocation, posX, posY);
-
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        GLint offsetLocation = glGetUniformLocation(shaderProgram, "transform");
+        for (int i = 0; i < 3; i++) {
+            glm::mat4 model = glm::mat4(1.0f); //start with identity matrix
+            model = glm::translate(model, positions[i]); //apply positions
+            model = glm::scale(model, glm::vec3(0.3f, 0.3f, 1.0f)); //make smaller
+
+            glUniformMatrix4fv(offsetLocation, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
         SDL_GL_SwapWindow(window);
     }
 
