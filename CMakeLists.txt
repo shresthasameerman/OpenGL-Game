@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.1)
-project(C__GameDEV)
+project(VoidShooter)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -8,9 +8,17 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
 
-add_executable(C__GameDEV main.cpp)
+add_executable(VoidShooter
+        src/main.cpp
+        src/Game.cpp
+        src/Player.cpp
+        src/Enemy.cpp
+        src/Bullet.cpp
+)
 
-target_link_libraries( C__GameDEV
+target_include_directories(VoidShooter PRIVATE src)
+
+target_link_libraries(VoidShooter
         SDL2::SDL2
         OpenGL::GL
         GLEW::GLEW
