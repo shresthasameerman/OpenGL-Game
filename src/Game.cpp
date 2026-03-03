@@ -81,6 +81,7 @@ Game::Game() {
     spawnTimer = 0.0f;
     spawnInterval = 2.0f;
     score = 0;
+    initStars();
 }
 
 Game::~Game() {
@@ -127,6 +128,8 @@ void Game::processInput(float deltaTime) {
 }
 
 void Game::update(float deltaTime) {
+
+    updateStars(deltaTime);
     // Spawn enemies
     spawnTimer += deltaTime;
     if (spawnTimer >= spawnInterval) {
@@ -181,6 +184,7 @@ void Game::render() {
 }
 
 void Game::run() {
+
     float verts[] = {
         0.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f,
@@ -214,6 +218,9 @@ void Game::run() {
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shaderProgram);
 
+        for (auto& s : stars)
+            drawRect(shaderProgram, VAO, s.position, glm::vec2(s.size), glm::vec3(s.brightness));
+
         // Draw player (cyan)
         drawRect(shaderProgram, VAO, player.position, player.size,
             glm::vec3(0.0f, 1.0f, 1.0f));
@@ -241,4 +248,26 @@ void Game::run() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
+}
+
+void Game::initStars() {
+    for (int i = 0; i < 100; i++) {
+        Star s;
+        float depth = (rand() % 100) / 100.0f;
+        s.position = glm::vec2(rand() % 1280, rand() % 720);
+        s.speed = 20.0f + depth * 80.0f;
+        s.size = 1.0f + depth * 2.0f;
+        s.brightness = 0.5f + depth * 0.5f;
+        stars.push_back(s);
+    }
+}
+
+void Game::updateStars(float deltaTime) {
+    for (auto& s : stars) {
+        s.position.y += s.speed * deltaTime;
+        if (s.position.y > 720) {
+            s.position.y = 0;
+            s.position.x = rand() % 1280;
+        }
+    }
 }

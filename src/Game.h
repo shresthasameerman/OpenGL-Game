@@ -35,4 +35,14 @@ private:
     Player player;
     std::vector<Bullet> bullets;
     std::vector<Enemy> enemies;
+
+    struct Star {
+        glm::vec2 position;
+        float speed;
+        float size;
+        float brightness;
+    };
+    std::vector<Star> stars;
+    void initStars();
+    void updateStars(float deltaTime);
 };
