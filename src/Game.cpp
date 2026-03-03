@@ -67,6 +67,7 @@ Game::Game() {
     glewExperimental = GL_TRUE;
     glewInit();
 
+    textRender = new TextRender("font.ttf", 32);
     GLuint v = compileShader(GL_VERTEX_SHADER, vertSrc);
     GLuint f = compileShader(GL_FRAGMENT_SHADER, fragSrc);
     shaderProgram = glCreateProgram();
@@ -85,6 +86,7 @@ Game::Game() {
 Game::~Game() {
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
+    delete textRender;
     SDL_Quit();
 }
 
@@ -228,6 +230,8 @@ void Game::run() {
                 glm::vec3(1.0f, 0.6f, 0.0f);
             drawRect(shaderProgram, VAO, e.position, e.size, col);
         }
+        // Draw score
+        textRender->drawText("Score: " + std::to_string(score), 20.0f, 20.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         SDL_GL_SwapWindow(window);
     }

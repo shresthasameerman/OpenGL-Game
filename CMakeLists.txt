@@ -14,6 +14,8 @@ add_executable(VoidShooter
         src/Player.cpp
         src/Enemy.cpp
         src/Bullet.cpp
+        src/TextRender.cpp
+        src/TextRender.h
 )
 
 target_include_directories(VoidShooter PRIVATE src)
@@ -24,4 +26,5 @@ target_link_libraries(VoidShooter
         GLEW::GLEW
         stb
         glm::glm
+        SDL2_ttf
 )

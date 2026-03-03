@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "Bullet.h"
 #include "Enemy.h"
+#include "TextRender.h"
 
 class Game {
     public:
@@ -25,6 +26,7 @@ private:
     GLuint shaderProgram;
     GLuint quadVAO;
     GLuint quadVBO;
+    TextRender* textRender;
     bool running;
     float spawnTimer;
     float spawnInterval;
