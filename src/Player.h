@@ -10,7 +10,7 @@ class Player {
         Player();
 
     void update(float deltaTime, const Uint8* keys);
-    void shoot(glm::vec2 mousePos, std::vector<Bullet>& bullets);
+    bool shoot(glm::vec2 mousePos, std::vector<Bullet>& bullets);
 
     glm::vec2 position;
     glm::vec2 size;

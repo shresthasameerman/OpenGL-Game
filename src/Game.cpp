@@ -52,6 +52,8 @@ void drawRect(GLuint shader, GLuint VAO, glm::vec2 pos, glm::vec2 size, glm::vec
 }
 
 Game::Game() {
+
+    audio  = new AudioManager();
     srand(time(nullptr));
 
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -85,6 +87,7 @@ Game::Game() {
 }
 
 Game::~Game() {
+    delete audio;
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     delete textRender;
@@ -113,6 +116,7 @@ void Game::processInput(float deltaTime) {
             int mx, my;
             SDL_GetMouseState(&mx, &my);
             player.shoot(glm::vec2(mx, my), bullets);
+            audio->playShoot();
         }
     }
 
@@ -121,6 +125,7 @@ void Game::processInput(float deltaTime) {
         int mx, my;
         SDL_GetMouseState(&mx, &my);
         player.shoot(glm::vec2(mx, my), bullets);
+        audio->playShoot();
     }
 
     const Uint8* keys = SDL_GetKeyboardState(nullptr);
@@ -153,6 +158,7 @@ void Game::update(float deltaTime) {
                 b.alive = false;
                 e.alive = false;
                 score++;
+                audio->playExplosion();
                 std::cout << "Score: " << score << "\n";
             }
         }

@@ -1,16 +1,10 @@
-//
-// Created by sameer on 3/2/26.
-//
-
 #include "Player.h"
-
-#include <SDL_scancode.h>
-
 #include "Bullet.h"
 #include <vector>
+#include <SDL2/SDL.h>
 
 Player::Player() {
-    position = glm::vec2(640.0f, 360.0f); //center of the screen
+    position = glm::vec2(640.0f, 360.0f);
     size = glm::vec2(48.0f, 48.0f);
     speed = 300.0f;
     shootCooldown = 0.2f;
@@ -30,11 +24,13 @@ void Player::update(float deltaTime, const Uint8* keys) {
     if (shootTimer > 0.0f) shootTimer -= deltaTime;
 }
 
-void Player::shoot(glm::vec2 mousePos, std::vector<Bullet> &bullets) {
+bool Player::shoot(glm::vec2 mousePos, std::vector<Bullet>& bullets) {
     if (shootTimer <= 0.0f) {
         glm::vec2 center = position + size * 0.5f;
         glm::vec2 direction = mousePos - center;
         bullets.emplace_back(center, direction);
         shootTimer = shootCooldown;
+        return true;
     }
+    return false;
 }

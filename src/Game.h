@@ -7,6 +7,7 @@
 #include "Bullet.h"
 #include "Enemy.h"
 #include "TextRender.h"
+#include "AudioManager.h"
 
 class Game {
     public:
@@ -31,6 +32,7 @@ private:
     float spawnTimer;
     float spawnInterval;
     int score;
+    AudioManager* audio;
 
     Player player;
     std::vector<Bullet> bullets;

@@ -16,6 +16,8 @@ add_executable(VoidShooter
         src/Bullet.cpp
         src/TextRender.cpp
         src/TextRender.h
+        src/AudioManager.cpp
+        src/AudioManager.h
 )
 
 target_include_directories(VoidShooter PRIVATE src)
@@ -27,4 +29,5 @@ target_link_libraries(VoidShooter
         stb
         glm::glm
         SDL2_ttf
+        SDL2_mixer
 )
