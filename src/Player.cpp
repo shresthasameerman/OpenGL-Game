@@ -2,7 +2,6 @@
 #include "Bullet.h"
 #include <vector>
 #include <SDL2/SDL.h>
-
 Player::Player() {
     position = glm::vec2(640.0f, 360.0f);
     size = glm::vec2(48.0f, 48.0f);
@@ -10,6 +9,8 @@ Player::Player() {
     shootCooldown = 0.2f;
     shootTimer = 0.0f;
     alive = true;
+    health = 3;
+    invincibleTimer = 0.0f;
 }
 
 void Player::update(float deltaTime, const Uint8* keys) {
@@ -22,6 +23,7 @@ void Player::update(float deltaTime, const Uint8* keys) {
     position.y = glm::clamp(position.y, 0.0f, 720.0f - size.y);
 
     if (shootTimer > 0.0f) shootTimer -= deltaTime;
+    if (invincibleTimer > 0.0f) invincibleTimer -= deltaTime;
 }
 
 bool Player::shoot(glm::vec2 mousePos, std::vector<Bullet>& bullets) {

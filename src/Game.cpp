@@ -52,8 +52,7 @@ void drawRect(GLuint shader, GLuint VAO, glm::vec2 pos, glm::vec2 size, glm::vec
 }
 
 Game::Game() {
-
-    audio  = new AudioManager();
+    audio = new AudioManager();
     srand(time(nullptr));
 
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -70,6 +69,7 @@ Game::Game() {
     glewInit();
 
     textRender = new TextRender("font.ttf", 32);
+
     GLuint v = compileShader(GL_VERTEX_SHADER, vertSrc);
     GLuint f = compileShader(GL_FRAGMENT_SHADER, fragSrc);
     shaderProgram = glCreateProgram();
@@ -83,15 +83,28 @@ Game::Game() {
     spawnTimer = 0.0f;
     spawnInterval = 2.0f;
     score = 0;
+    state = GameState::PLAYING;
+    flashTimer = 0.0f;
     initStars();
 }
 
 Game::~Game() {
     delete audio;
+    delete textRender;
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
-    delete textRender;
     SDL_Quit();
+}
+
+void Game::restartGame() {
+    score = 0;
+    spawnTimer = 0.0f;
+    spawnInterval = 2.0f;
+    flashTimer = 0.0f;
+    bullets.clear();
+    enemies.clear();
+    player = Player();
+    state = GameState::PLAYING;
 }
 
 void Game::spawnEnemy() {
@@ -112,38 +125,48 @@ void Game::processInput(float deltaTime) {
         if (event.type == SDL_QUIT) running = false;
         if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
 
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-            int mx, my;
-            SDL_GetMouseState(&mx, &my);
-            player.shoot(glm::vec2(mx, my), bullets);
-            audio->playShoot();
+        if (state == GameState::GAMEOVER) {
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r)
+                restartGame();
+        }
+
+        if (state == GameState::PLAYING) {
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                int mx, my;
+                SDL_GetMouseState(&mx, &my);
+                if (player.shoot(glm::vec2(mx, my), bullets))
+                    audio->playShoot();
+            }
         }
     }
 
-    // Hold to rapid fire
-    if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-        int mx, my;
-        SDL_GetMouseState(&mx, &my);
-        player.shoot(glm::vec2(mx, my), bullets);
-        audio->playShoot();
-    }
+    if (state == GameState::PLAYING) {
+        if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+            int mx, my;
+            SDL_GetMouseState(&mx, &my);
+            if (player.shoot(glm::vec2(mx, my), bullets))
+                audio->playShoot();
+        }
 
-    const Uint8* keys = SDL_GetKeyboardState(nullptr);
-    player.update(deltaTime, keys);
+        const Uint8* keys = SDL_GetKeyboardState(nullptr);
+        player.update(deltaTime, keys);
+    }
 }
 
 void Game::update(float deltaTime) {
+    if (state != GameState::PLAYING) return;
 
     updateStars(deltaTime);
-    // Spawn enemies
+
+    if (flashTimer > 0.0f) flashTimer -= deltaTime;
+
     spawnTimer += deltaTime;
     if (spawnTimer >= spawnInterval) {
         spawnEnemy();
         spawnTimer = 0.0f;
-        if (spawnInterval > 0.5f) spawnInterval -= 0.05f; // gradually speed up
+        if (spawnInterval > 0.5f) spawnInterval -= 0.05f;
     }
 
-    // Update bullets and enemies
     for (auto& b : bullets) b.update(deltaTime);
     for (auto& e : enemies) e.update(deltaTime, player.position + player.size * 0.5f);
 
@@ -159,7 +182,6 @@ void Game::update(float deltaTime) {
                 e.alive = false;
                 score++;
                 audio->playExplosion();
-                std::cout << "Score: " << score << "\n";
             }
         }
     }
@@ -167,16 +189,22 @@ void Game::update(float deltaTime) {
     // Enemy vs player collision
     for (auto& e : enemies) {
         if (!e.alive) continue;
+        if (player.invincibleTimer > 0.0f) continue;
         if (e.position.x < player.position.x + player.size.x &&
             e.position.x + e.size.x > player.position.x &&
             e.position.y < player.position.y + player.size.y &&
             e.position.y + e.size.y > player.position.y) {
-            player.alive = false;
-            running = false;
+            player.health--;
+            player.invincibleTimer = 1.5f; // 1.5 seconds invincible
+            flashTimer = 0.3f;             // screen flash
+            e.alive = false;
+            if (player.health <= 0) {
+                player.alive = false;
+                state = GameState::GAMEOVER;
+            }
         }
     }
 
-    // Clean up dead objects
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
         [](const Bullet& b) { return !b.alive; }), bullets.end());
     enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
@@ -189,8 +217,29 @@ void Game::render() {
     glUseProgram(shaderProgram);
 }
 
-void Game::run() {
+void Game::initStars() {
+    for (int i = 0; i < 100; i++) {
+        Star s;
+        float depth = (rand() % 100) / 100.0f;
+        s.position = glm::vec2(rand() % 1280, rand() % 720);
+        s.speed = 20.0f + depth * 80.0f;
+        s.size = 1.0f + depth * 2.0f;
+        s.brightness = 0.5f + depth * 0.5f;
+        stars.push_back(s);
+    }
+}
 
+void Game::updateStars(float deltaTime) {
+    for (auto& s : stars) {
+        s.position.y += s.speed * deltaTime;
+        if (s.position.y > 720) {
+            s.position.y = 0;
+            s.position.x = rand() % 1280;
+        }
+    }
+}
+
+void Game::run() {
     float verts[] = {
         0.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f,
@@ -219,61 +268,59 @@ void Game::run() {
         processInput(deltaTime);
         update(deltaTime);
 
-        // Render
-        glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
+        // Background color — flash red when hit
+        if (flashTimer > 0.0f)
+            glClearColor(0.3f, 0.0f, 0.0f, 1.0f);
+        else
+            glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
+
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shaderProgram);
 
+        // Always draw stars
         for (auto& s : stars)
             drawRect(shaderProgram, VAO, s.position, glm::vec2(s.size), glm::vec3(s.brightness));
 
-        // Draw player (cyan)
-        drawRect(shaderProgram, VAO, player.position, player.size,
-            glm::vec3(0.0f, 1.0f, 1.0f));
+        if (state == GameState::PLAYING) {
+            // Draw player — blink when invincible
+            bool showPlayer = player.invincibleTimer <= 0.0f ||
+                              (int)(player.invincibleTimer * 10) % 2 == 0;
+            if (showPlayer)
+                drawRect(shaderProgram, VAO, player.position, player.size,
+                    glm::vec3(0.0f, 1.0f, 1.0f));
 
-        // Draw bullets (yellow)
-        for (auto& b : bullets)
-            drawRect(shaderProgram, VAO, b.position, b.size,
-                glm::vec3(1.0f, 1.0f, 0.0f));
+            // Draw bullets
+            for (auto& b : bullets)
+                drawRect(shaderProgram, VAO, b.position, b.size,
+                    glm::vec3(1.0f, 1.0f, 0.0f));
 
-        // Draw enemies - red=straight, orange=zigzag
-        for (auto& e : enemies) {
-            glm::vec3 col = (e.type == EnemyType::STRAIGHT) ?
-                glm::vec3(1.0f, 0.2f, 0.2f) :
-                glm::vec3(1.0f, 0.6f, 0.0f);
-            drawRect(shaderProgram, VAO, e.position, e.size, col);
+            // Draw enemies
+            for (auto& e : enemies) {
+                glm::vec3 col = (e.type == EnemyType::STRAIGHT) ?
+                    glm::vec3(1.0f, 0.2f, 0.2f) :
+                    glm::vec3(1.0f, 0.6f, 0.0f);
+                drawRect(shaderProgram, VAO, e.position, e.size, col);
+            }
+
+            // HUD
+            textRender->drawText("Score: " + std::to_string(score), 20.0f, 20.0f,
+                glm::vec3(1.0f, 1.0f, 1.0f));
+            textRender->drawText("Lives: " + std::to_string(player.health), 20.0f, 60.0f,
+                glm::vec3(1.0f, 0.3f, 0.3f));
+
+        } else if (state == GameState::GAMEOVER) {
+            textRender->drawText("GAME OVER", 460.0f, 280.0f,
+                glm::vec3(1.0f, 0.2f, 0.2f));
+            textRender->drawText("Score: " + std::to_string(score), 540.0f, 340.0f,
+                glm::vec3(1.0f, 1.0f, 1.0f));
+            textRender->drawText("Press R to Restart", 430.0f, 400.0f,
+                glm::vec3(0.8f, 0.8f, 0.8f));
         }
-        // Draw score
-        textRender->drawText("Score: " + std::to_string(score), 20.0f, 20.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         SDL_GL_SwapWindow(window);
     }
 
-    std::cout << "Game Over! Final Score: " << score << "\n";
-
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
-}
-
-void Game::initStars() {
-    for (int i = 0; i < 100; i++) {
-        Star s;
-        float depth = (rand() % 100) / 100.0f;
-        s.position = glm::vec2(rand() % 1280, rand() % 720);
-        s.speed = 20.0f + depth * 80.0f;
-        s.size = 1.0f + depth * 2.0f;
-        s.brightness = 0.5f + depth * 0.5f;
-        stars.push_back(s);
-    }
-}
-
-void Game::updateStars(float deltaTime) {
-    for (auto& s : stars) {
-        s.position.y += s.speed * deltaTime;
-        if (s.position.y > 720) {
-            s.position.y = 0;
-            s.position.x = rand() % 1280;
-        }
-    }
 }

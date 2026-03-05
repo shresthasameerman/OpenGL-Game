@@ -17,10 +17,15 @@ class Game {
     void run();
 
 private:
+    enum class GameState {PLAYING, GAMEOVER};
+
     void processInput(float deltaTime);
     void update(float deltaTime);
     void render();
     void spawnEnemy();
+    void initStars();
+    void updateStars(float deltaTime);
+    void restartGame();
 
     SDL_Window *window;
     SDL_GLContext glContext;
@@ -33,6 +38,8 @@ private:
     float spawnInterval;
     int score;
     AudioManager* audio;
+    GameState state;
+    float flashTimer;
 
     Player player;
     std::vector<Bullet> bullets;
@@ -45,6 +52,4 @@ private:
         float brightness;
     };
     std::vector<Star> stars;
-    void initStars();
-    void updateStars(float deltaTime);
 };

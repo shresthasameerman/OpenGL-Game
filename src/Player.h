@@ -2,8 +2,9 @@
 #include <SDL_stdinc.h>
 #include <vector>
 #include <glm/glm.hpp>
-
 #include "Bullet.h"
+
+class Bullet;
 
 class Player {
     public:
@@ -18,4 +19,6 @@ class Player {
     float shootCooldown;
     float shootTimer;
     bool alive;
+    int health;
+    float invincibleTimer;
 };
