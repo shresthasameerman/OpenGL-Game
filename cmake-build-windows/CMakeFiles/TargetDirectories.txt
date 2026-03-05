@@ -1,3 +1,0 @@
-/home/sameer/Documents/C++GameDEV/cmake-build-windows/CMakeFiles/VoidShooter.dir
-/home/sameer/Documents/C++GameDEV/cmake-build-windows/CMakeFiles/edit_cache.dir
-/home/sameer/Documents/C++GameDEV/cmake-build-windows/CMakeFiles/rebuild_cache.dir
