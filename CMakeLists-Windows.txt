@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 3.20)
+project(VoidShooter)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
+set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+
+set(WINDOWS_LIBS $ENV{HOME}/Documents/windows-libs)
+
+set(SDL2_DIR     ${WINDOWS_LIBS}/SDL2-2.28.5/x86_64-w64-mingw32)
+set(SDL2_TTF_DIR ${WINDOWS_LIBS}/SDL2_ttf-2.20.2/x86_64-w64-mingw32)
+set(SDL2_MIXER_DIR ${WINDOWS_LIBS}/SDL2_mixer-2.6.3/x86_64-w64-mingw32)
+set(GLEW_DIR     ${WINDOWS_LIBS}/glew-2.2.0)
+
+add_executable(VoidShooter
+    src/main.cpp
+    src/Game.cpp
+    src/Player.cpp
+    src/Enemy.cpp
+    src/Bullet.cpp
+    src/AudioManager.cpp
+    src/TextRender.cpp
+    src/TextureLoader.cpp
+)
+target_include_directories(VoidShooter PRIVATE
+    src
+    ${SDL2_DIR}/include
+    ${SDL2_DIR}/include/SDL2
+    ${SDL2_TTF_DIR}/include
+    ${SDL2_TTF_DIR}/include/SDL2
+    ${SDL2_MIXER_DIR}/include
+    ${SDL2_MIXER_DIR}/include/SDL2
+    ${GLEW_DIR}/include
+    /usr/x86_64-w64-mingw32/include
+    /usr/lib/gcc/x86_64-w64-mingw32/13-win32/include/c++
+)
+
+target_link_directories(VoidShooter PRIVATE
+    ${SDL2_DIR}/lib
+    ${SDL2_TTF_DIR}/lib
+    ${SDL2_MIXER_DIR}/lib
+    ${GLEW_DIR}/lib/Release/x64
+)
+
+target_compile_definitions(VoidShooter PRIVATE SDL_MAIN_HANDLED)
+
+target_link_libraries(VoidShooter
+    mingw32
+    SDL2main
+    SDL2
+    SDL2_ttf
+    SDL2_mixer
+    glew32
+    opengl32
+)

@@ -17,7 +17,7 @@ class Game {
     void run();
 
 private:
-    enum class GameState {PLAYING, GAMEOVER};
+    enum class GameState { MAINMENU, PLAYING, GAMEOVER };
 
     void processInput(float deltaTime);
     void update(float deltaTime);
@@ -33,6 +33,7 @@ private:
     GLuint quadVAO;
     GLuint quadVBO;
     TextRender* textRender;
+    TextRender* titleFont;
     bool running;
     float spawnTimer;
     float spawnInterval;
@@ -40,6 +41,11 @@ private:
     AudioManager* audio;
     GameState state;
     float flashTimer;
+    GLuint texPlayer;
+    GLuint texBullet;
+    GLuint texEnemyStraight;
+    GLuint texEnemyZigzag;
+    glm::vec2 mousePos;
 
     Player player;
     std::vector<Bullet> bullets;

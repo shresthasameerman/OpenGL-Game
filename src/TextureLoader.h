@@ -1,13 +1,8 @@
-//
-// Created by sameer on 3/5/26.
-//
-
-#ifndef VOIDSHOOTER_TEXTURELOADER_H
-#define VOIDSHOOTER_TEXTURELOADER_H
-
+#pragma once
+#include <GL/glew.h>
+#include <string>
 
 class TextureLoader {
+public:
+    static GLuint load(const std::string& path);
 };
-
-
-#endif //VOIDSHOOTER_TEXTURELOADER_H

@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL_stdinc.h>
+#include <SDL2/SDL.h>
 #include <vector>
 #include <glm/glm.hpp>
 #include "Bullet.h"
